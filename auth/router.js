@@ -1,16 +1,16 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import passport from 'passport';
-import jwt from 'jsonwebtoken';
+'use strict';
+const express = require('express');
+const passport = require('passport');
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
-import { JWT_SECRET, JWT_EXPIRY, } from '../config';
+const config = require('../config');
+const router = express.Router();
 
-export const router = express.Router();
-
-const createAuthToken = (user) => {
-  return jwt.sign({ user, }, JWT_SECRET, {
+const createAuthToken = function (user) {
+  return jwt.sign({ user, }, config.JWT_SECRET, {
     subject: user.username,
-    expiresIn: JWT_EXPIRY,
+    expiresIn: config.JWT_EXPIRY,
     algorithm: 'HS256',
   });
 };
@@ -30,3 +30,5 @@ router.post('/refresh', jwtAuth, (req, res) => {
   const authToken = createAuthToken(req.user);
   res.json({ authToken, });
 });
+
+module.exports = { router, };

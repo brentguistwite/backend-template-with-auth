@@ -1,4 +1,4 @@
-import { User, } from './models';
-import { router, } from './router';
+const { User, } = require('./models');
+const { router, } = require('./router');
 
 module.exports = { User, router, };

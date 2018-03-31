@@ -1,52 +1,74 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import passport from 'passport';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import morgan from 'morgan';
+require('dotenv').config();
 
-import { dbConnect, } from './db-mongoose';
-import { router as usersRouter, } from './users';
-import { PORT, CLIENT_ORIGIN, } from './config';
-import { router as authRouter, localStrategy, jwtStrategy, } from './auth';
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const morgan = require('morgan');
+const passport = require('passport');
+const mongoose = require('mongoose');
+const { router: usersRouter, } = require('./users');
+const { router: authRouter, localStrategy, jwtStrategy, } = require('./auth');
 
-
-export const app = express();
+const { PORT, CLIENT_ORIGIN, DATABASE_URL, } = require('./config');
 mongoose.Promise = global.Promise;
-
-
-
-// Logging
-app.use(morgan('common'));
-
-// CORS
-app.use(
-  cors({ origin: CLIENT_ORIGIN, })
-);
-
+const app = express();
 app.use(
   bodyParser.json()
 );
 
-passport.use(localStrategy);
-passport.use(jwtStrategy);
+app.use(
+  morgan('common') // eslint-disable-line
+);
+
+app.use(
+  cors({ origin: CLIENT_ORIGIN, })
+);
 
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 
+passport.use(localStrategy);
+passport.use(jwtStrategy);
 
-export const runServer = (port = PORT) => {
-  const server = app
-    .listen(port, () => {
-      console.info(`App listening on port ${server.address().port}`);
-    })
-    .on('error', (err) => {
-      console.error('Express failed to start');
-      console.error(err);
+
+// Referenced by both runServer and closeServer. closeServer
+// Assumes runServer has run and set `server` to a server object
+let server;
+
+function runServer(databaseUrl, port = PORT) {
+  return new Promise((resolve, reject) => {
+    mongoose.connect(databaseUrl, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      server = app.listen(port, () => {
+        console.log(`Your app is listening on port ${port}`);
+        resolve();
+      })
+        .on('error', (err) => {
+          mongoose.disconnect();
+          reject(err);
+        });
     });
-};
+  });
+}
+
+function closeServer() {
+  return mongoose.disconnect().then(() => {
+    return new Promise((resolve, reject) => {
+      console.log('Closing server');
+      server.close((err) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
+  });
+}
 
 if (require.main === module) {
-  dbConnect();
-  runServer();
+  runServer(DATABASE_URL).catch(err => console.error(err));
 }
+
+module.exports = { app, runServer, closeServer, };

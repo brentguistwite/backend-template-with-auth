@@ -1,4 +1,4 @@
-import { router, } from './router';
-import { localStrategy, jwtStrategy, } from './strategies';
+const { router, } = require('./router');
+const { localStrategy, jwtStrategy, } = require('./strategies');
 
 module.exports = { router, localStrategy, jwtStrategy, };

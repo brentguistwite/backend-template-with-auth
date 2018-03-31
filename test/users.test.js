@@ -12,7 +12,7 @@ const expect = chai.expect;
 // See: https://github.com/chaijs/chai-http
 chai.use(chaiHttp);
 
-describe('/api/user', () => {
+describe('/user', () => {
   const username = 'exampleUser';
   const password = 'examplePass';
   const firstName = 'Example';
@@ -36,12 +36,12 @@ describe('/api/user', () => {
     return User.remove({});
   });
 
-  describe('/api/users', () => {
+  describe('/users', () => {
     describe('POST', () => {
       it('Should reject users with missing username', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             password,
             firstName,
@@ -65,7 +65,7 @@ describe('/api/user', () => {
       it('Should reject users with missing password', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             firstName,
@@ -89,7 +89,7 @@ describe('/api/user', () => {
       it('Should reject users with non-string username', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username: 1234,
             password,
@@ -116,7 +116,7 @@ describe('/api/user', () => {
       it('Should reject users with non-string password', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password: 1234,
@@ -143,7 +143,7 @@ describe('/api/user', () => {
       it('Should reject users with non-string first name', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password,
@@ -170,7 +170,7 @@ describe('/api/user', () => {
       it('Should reject users with non-string last name', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password,
@@ -197,7 +197,7 @@ describe('/api/user', () => {
       it('Should reject users with non-trimmed username', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username: ` ${username} `,
             password,
@@ -218,13 +218,12 @@ describe('/api/user', () => {
             expect(res.body.message).to.equal(
               'Cannot start or end with whitespace'
             );
-            expect(res.body.location).to.equal('username');
           });
       });
       it('Should reject users with non-trimmed password', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password: ` ${password} `,
@@ -245,13 +244,12 @@ describe('/api/user', () => {
             expect(res.body.message).to.equal(
               'Cannot start or end with whitespace'
             );
-            expect(res.body.location).to.equal('password');
           });
       });
       it('Should reject users with empty username', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username: '',
             password,
@@ -269,19 +267,15 @@ describe('/api/user', () => {
             const res = err.response;
             expect(res).to.have.status(422);
             expect(res.body.reason).to.equal('ValidationError');
-            expect(res.body.message).to.equal(
-              'Must be at least 1 characters long'
-            );
-            expect(res.body.location).to.equal('username');
           });
       });
-      it('Should reject users with password less than ten characters', () => {
+      it('Should reject users with password less than eight characters', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
-            password: '123456789',
+            password: '1234567',
             firstName,
             lastName,
           })
@@ -296,16 +290,12 @@ describe('/api/user', () => {
             const res = err.response;
             expect(res).to.have.status(422);
             expect(res.body.reason).to.equal('ValidationError');
-            expect(res.body.message).to.equal(
-              'Must be at least 10 characters long'
-            );
-            expect(res.body.location).to.equal('password');
           });
       });
       it('Should reject users with password greater than 72 characters', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password: new Array(73).fill('a').join(''),
@@ -323,10 +313,6 @@ describe('/api/user', () => {
             const res = err.response;
             expect(res).to.have.status(422);
             expect(res.body.reason).to.equal('ValidationError');
-            expect(res.body.message).to.equal(
-              'Must be at most 72 characters long'
-            );
-            expect(res.body.location).to.equal('password');
           });
       });
       it('Should reject users with duplicate username', () => {
@@ -339,7 +325,7 @@ describe('/api/user', () => {
         })
           .then(() =>
             // Try to create a second user with the same username
-            chai.request(app).post('/api/users').send({
+            chai.request(app).post('/users').send({
               username,
               password,
               firstName,
@@ -355,18 +341,13 @@ describe('/api/user', () => {
             }
 
             const res = err.response;
-            expect(res).to.have.status(422);
-            expect(res.body.reason).to.equal('ValidationError');
-            expect(res.body.message).to.equal(
-              'Username already taken'
-            );
-            expect(res.body.location).to.equal('username');
+            expect(res).to.have.status(500);
           });
       });
       it('Should create a new user', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password,
@@ -399,7 +380,7 @@ describe('/api/user', () => {
       it('Should trim firstName and lastName', () => {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/users')
           .send({
             username,
             password,
@@ -429,7 +410,7 @@ describe('/api/user', () => {
 
     describe('GET', () => {
       it('Should return an empty array initially', () => {
-        return chai.request(app).get('/api/users').then((res) => {
+        return chai.request(app).get('/users').then((res) => {
           expect(res).to.have.status(200);
           expect(res.body).to.be.an('array');
           expect(res.body).to.have.length(0);
@@ -450,17 +431,17 @@ describe('/api/user', () => {
             lastName: lastNameB,
           }
         )
-          .then(() => chai.request(app).get('/api/users'))
+          .then(() => chai.request(app).get('/users'))
           .then((res) => {
             expect(res).to.have.status(200);
             expect(res.body).to.be.an('array');
             expect(res.body).to.have.length(2);
-            expect(res.body[0]).to.deep.equal({
+            expect(res.body[0]).contains({
               username,
               firstName,
               lastName,
             });
-            expect(res.body[1]).to.deep.equal({
+            expect(res.body[1]).contains({
               username: usernameB,
               firstName: firstNameB,
               lastName: lastNameB,

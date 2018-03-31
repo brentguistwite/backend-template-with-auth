@@ -1,21 +1,26 @@
-import mongoose from 'mongoose';
-
-import { DATABASE_URL, } from './config';
-
+const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
-export const dbConnect = (url = DATABASE_URL) => {
+const { DATABASE_URL, } = require('./config');
+
+function dbConnect(url = DATABASE_URL) {
   return mongoose.connect(url)
     .catch((err) => {
       console.error('Mongoose failed to connect');
       console.error(err);
     });
-};
+}
 
-export const dbDisconnect = () => {
+function dbDisconnect() {
   return mongoose.disconnect();
-};
+}
 
-export const dbGet = () => {
+function dbGet() {
   return mongoose;
+}
+
+module.exports = {
+  dbConnect,
+  dbDisconnect,
+  dbGet,
 };

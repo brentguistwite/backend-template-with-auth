@@ -1,20 +1,23 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
-import passport from 'passport';
-import asyncHandler from 'express-async-handler';
+require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const passport = require('passport');
+const mongoose = require('mongoose');
+const asyncHandler = require('express-async-handler');
 
-import { User, } from './models';
-import { jwtStrategy, } from './../auth/strategies';
+const { jwtStrategy, } = require('./../auth/strategies');
+const { User, } = require('./models');
 
-export const router = express.Router();
+const router = express.Router();
+
+const jwtAuth = passport.authenticate('jwt', { session: false, });
 
 mongoose.Promise = global.Promise;
 
 router.use(bodyParser.json());
 passport.use(jwtStrategy);
 
-const jwtAuth = passport.authenticate('jwt', { session: false, });
+
 
 router.get('/', asyncHandler(async (req, res, next) => {
   const users = await User.find();
@@ -60,9 +63,8 @@ router.post('/', asyncHandler(async (req, res, next) => {
     });
   }
   // Bcrypt truncates after 72 character
-  let wrongPasswordSize = password.length <= 8 && password.length >= 72;
-  let wrongUsernameSize = username.length <= 1 && username.length >= 15;
-
+  let wrongPasswordSize = password.length <= 8 || password.length >= 72;
+  let wrongUsernameSize = username.length <= 1 || username.length >= 15;
 
   if (wrongUsernameSize || wrongPasswordSize) {
     return res.status(422).json({
@@ -79,9 +81,10 @@ router.post('/', asyncHandler(async (req, res, next) => {
     .find({ username, })
     .count();
   if (doesUserExist > 0) {
-    throw new Error({
+    return Promise.reject({
+      code: 422,
       reason: 'ValidationError',
-      message: 'Username already exists',
+      message: 'Username already taken'
     });
   }
 
@@ -94,3 +97,5 @@ router.post('/', asyncHandler(async (req, res, next) => {
   });
   res.status(201).location(`/users/${newUser.id}`).json(newUser.serialize());
 }));
+
+module.exports = { router };
